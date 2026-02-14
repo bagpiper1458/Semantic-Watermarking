@@ -21,7 +21,7 @@ detect_trials = 1000
 RANGE_EVAL = range(0,detect_trials)
 
 # [Load Diffusion-Attacker pipeline]
-att_pipe = ReSDPipeline.from_pretrained("stabilityai/stable-diffusion-2-1", torch_dtype=torch.float16, revision="fp16")
+att_pipe = ReSDPipeline.from_pretrained("SagiPolaczek/stable-diffusion-2-1-base", torch_dtype=torch.float16, revision="fp16")
 att_pipe.set_progress_bar_config(disable=True)
 att_pipe.to("cuda")
 attacker = DiffWMAttacker(att_pipe, batch_size=batch_size, noise_step=60, captions={})

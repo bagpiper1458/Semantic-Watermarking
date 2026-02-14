@@ -20,13 +20,13 @@ def main(args):
 
     # [Datasets]
     meta_annot, prompt_key, gt_folder = get_text_dataset(args.dataset_id)
-
     # [Attack Settings]
     case_names = ["Clean", "Brightness", "Contrast", "JPEG", "Blur", "Noise", "BM3D",
-              "VAE-B", "VAE-C", "Diff", "CC", "RC", "Avg"]
-    attack_dict = {"Brightness":6, "Contrast":0.5, "JPEG":25, "Blur":5, "Noise":0.05, "BM3D":0.1, 
-                "VAE-B":3, "VAE-C":3,
-                "CC":0.5, "RC":0.7}
+                  "VAE-B", "VAE-C", "Rotation", "CS75", "Diff", "CC", "RC"]
+    attack_dict = {"Brightness":6, "Contrast":0.5, "JPEG":25, "Blur":5, "Noise":0.05, "BM3D":0.1,
+                  "VAE-B":3, "VAE-C":3,
+                  "Rotation":75, "CS75":0.75,
+                  "CC":0.5, "RC":0.7}
 
     # [Evaluation Settings]
     num_dataset = len(meta_annot)
@@ -35,7 +35,7 @@ def main(args):
     RANGE_EVAL = range(0,detect_trials)
     
     # [Stable-Diffusion-v2-1-base Settings]
-    model_id = "stabilityai/stable-diffusion-2-1-base"
+    model_id = "SagiPolaczek/stable-diffusion-2-1-base"
     resolution = 512
     torch_dtype = torch.float32
 
@@ -49,6 +49,7 @@ def main(args):
     no_watermark_results_list = []
     Fourier_watermark_results_list = []
     id_acc_results_list = []
+    bit_acc_results_list = []
     save_verify_name = "verify-l1.npz"
     save_identify_name = "identify-acc.npz"
 
@@ -59,7 +60,7 @@ def main(args):
         # [Evaluation methods]
         is_center = args.wm_type in ["HSTR", "HSQR"]
         channel_min = args.wm_type in ["RingID", "HSTR"]
-        if args.wm_type in ["Tree-Ring", "RingID", "HSTR"]:
+        if args.wm_type in ["Tree-Ring", "METR", "RingID", "HSTR"]:
             eval_method = {"Distance":"L1", "Metrics":"|a-b|", "func":get_distance, 
                 "kwargs":{"p":1, "center": is_center, 
                     "mode":"complex", "channel_min":channel_min}}
@@ -71,6 +72,8 @@ def main(args):
         channel = RINGID_WATERMARK_CHANNEL if args.wm_type in ["RingID", "HSTR"] else TREE_WATERMARK_CHANNEL
         if args.wm_type == "Tree-Ring":
             mask = watermark_region_mask_tree.cpu() # (1,64,64), r=14 inner-circle mask (boolean)
+        elif args.wm_type == "METR":
+            mask = watermark_region_mask_metr.cpu() # (1,64,64), ring mask
         elif args.wm_type == "RingID":
             mask = watermark_region_mask_ringid.cpu() # (C_R+C_H,64,64)
         elif args.wm_type == "HSTR":
@@ -91,6 +94,7 @@ def main(args):
             img_pil_wm = Image.open(os.path.join(save_dir, f"img_pil_wm/{file_name}"))
             img_pil_diff_attacked = Image.open(os.path.join(save_dir, f"img_pil-diffatt_fp16/{file_name}"))
             img_pil_wm_diff_attacked = Image.open(os.path.join(save_dir, f"img_pil_wm-diffatt_fp16/{file_name}"))
+
             distorted_image_list = [
                 [img_pil, img_pil_wm], # Clean
                 image_distortion(img_pil, img_pil_wm, seed=this_seed, brightness_factor=attack_dict["Brightness"]),
@@ -101,10 +105,13 @@ def main(args):
                 image_distortion(img_pil, img_pil_wm, seed=this_seed, bm3d_sigma=attack_dict["BM3D"]),
                 image_distortion(img_pil, img_pil_wm, seed=this_seed, vaeb_quality=attack_dict["VAE-B"]),
                 image_distortion(img_pil, img_pil_wm, seed=this_seed, vaec_quality=attack_dict["VAE-C"]),
+                image_distortion(img_pil, img_pil_wm, seed=this_seed, r_degree=attack_dict["Rotation"]),
+                image_distortion(img_pil, img_pil_wm, seed=this_seed, crop_scale_area_ratio=attack_dict["CS75"]),
                 [img_pil_diff_attacked, img_pil_wm_diff_attacked], # Diffusion-Attack (Regeneration)
                 image_distortion(img_pil, img_pil_wm, seed=this_seed, center_crop_area_ratio=attack_dict["CC"]),
-                image_distortion(img_pil, img_pil_wm, seed=this_seed, random_crop_area_ratio=attack_dict["RC"]),]
-            
+                image_distortion(img_pil, img_pil_wm, seed=this_seed, random_crop_area_ratio=attack_dict["RC"]),
+            ]
+
             img_pil_distorted_list = [pair[0] for pair in distorted_image_list]
             img_pil_wm_distorted_list = [pair[1] for pair in distorted_image_list]
 
@@ -130,7 +137,7 @@ def main(args):
             for distortion_index in range(len(distorted_image_list)): # 12 Cases
                 no_wm_zT_fft = no_wm_distorted_zT_fft[distortion_index][None, ...] # (1,4,64,64)
                 Fourier_wm_zT_fft = Fourier_wm_distorted_zT_fft[distortion_index][None, ...] # (1,4,64,64)
-                if args.wm_type in ["Tree-Ring", "RingID", "HSTR"]:
+                if args.wm_type in ["Tree-Ring", "METR", "RingID", "HSTR"]:
                     no_wm_verify_l1 = -eval_method['func'](pattern_gt, no_wm_zT_fft, mask=mask, channel=channel, **eval_method['kwargs'])
                     Fourier_wm_verify_l1 = -eval_method['func'](pattern_gt, Fourier_wm_zT_fft, mask=mask, channel=channel, **eval_method['kwargs'])
                 elif args.wm_type == "HSQR":
@@ -139,85 +146,107 @@ def main(args):
                 no_wm_result.append(no_wm_verify_l1)
                 Fourier_wm_result.append(Fourier_wm_verify_l1)
             no_watermark_results_list.append(no_wm_result)
-            Fourier_watermark_results_list.append(Fourier_wm_result)
-
-            # [Identification] Ground-Truth Pattern Matching Accuracy (Perfect-Match:1 / Not-Match:0)
+            Fourier_watermark_results_list.append(Fourier_wm_result)            # [Identification] Nearest-pattern accuracy (Perfect-Match) + Bit accuracy
             id_acc_result = []
-            for distortion_index in range(len(distorted_image_list)): # 12 Cases
+            bit_acc_result = []
+            num_bits = int(np.log2(wm_capacity))
+            for distortion_index in range(len(distorted_image_list)):
                 Fourier_wm_zT_fft = Fourier_wm_distorted_zT_fft[distortion_index][None, ...] # (1,4,64,64)
                 candidate_distances_list = []
                 for Fourier_watermark_pattern in Fourier_watermark_pattern_list:  # traverse all candidate patterns
-                    if args.wm_type in ["Tree-Ring", "RingID", "HSTR"]:
+                    if args.wm_type in ["Tree-Ring", "METR", "RingID", "HSTR"]:
                         candidate_distance = eval_method['func'](Fourier_watermark_pattern, Fourier_wm_zT_fft, mask=mask, channel=channel, **eval_method['kwargs'])
                     elif args.wm_type == "HSQR":
                         candidate_distance = eval_method['func'](Fourier_watermark_pattern, Fourier_wm_zT_fft, channel=channel, **eval_method['kwargs'])
                     candidate_distances_list.append(candidate_distance)
-                id_acc = np.argmin(np.array(candidate_distances_list)) == key_index
+
+                pred_index = int(np.argmin(np.array(candidate_distances_list)))
+                id_acc = (pred_index == int(key_index))
+                # bit accuracy via Hamming similarity of indices
+                xor = pred_index ^ int(key_index)
+                hd = 0
+                while xor:
+                    hd += (xor & 1)
+                    xor >>= 1
+                bit_acc = 1.0 - (hd / max(1, num_bits))
+
                 id_acc_result.append(id_acc)
+                bit_acc_result.append(bit_acc)
+
             id_acc_results_list.append(id_acc_result)
+            bit_acc_results_list.append(bit_acc_result)
 
     # [Save results]
     no_watermark_results_list_array = np.array(no_watermark_results_list) # (1000,12)
     Fourier_watermark_results_list_array = np.array(Fourier_watermark_results_list) # (1000,12)
-    id_acc_results_list_array = np.array(id_acc_results_list) # (1000,12)
+    id_acc_results_list_array = np.array(id_acc_results_list)
+    bit_acc_results_list_array = np.array(bit_acc_results_list)
     np.savez(os.path.join(save_dir, save_verify_name), 
         no_wm=no_watermark_results_list_array, 
         wm=Fourier_watermark_results_list_array)
-    np.savez(os.path.join(save_dir, save_identify_name), 
-        wm=id_acc_results_list_array)
-
-    # [Print results]
+    np.savez(os.path.join(save_dir, save_identify_name),
+        wm=id_acc_results_list_array,
+        bit=bit_acc_results_list_array)
+    # [Print + Save results]
     from prettytable import PrettyTable
-    no_wms = no_watermark_results_list_array = np.array(no_watermark_results_list)
-    wms = np.array(Fourier_watermark_results_list) # (1000,12)
-    i_wms = np.array(id_acc_results_list) # (1000,12)
-    
-    auc_list, acc_list, low_list = [], [], []
-    for idx in range(no_wms.shape[1]): # 12 Cases
-        no_wm = no_wms[:, idx].tolist()
-        wm = wms[:, idx].tolist()
+
+    no_wms = np.array(no_watermark_results_list)
+    wms = np.array(Fourier_watermark_results_list)
+    i_wms = np.array(id_acc_results_list)
+    b_wms = np.array(bit_acc_results_list)
+
+    auc_list, tpr1_list = [], []
+    for j in range(no_wms.shape[1]):
+        no_wm = no_wms[:, j].tolist()
+        wm = wms[:, j].tolist()
         distances = no_wm + wm
         labels = [0] * len(no_wm) + [1] * len(wm)
         fpr, tpr, _ = metrics.roc_curve(labels, distances, pos_label=1)
         auc = metrics.auc(fpr, tpr)
-        acc = 1 - ((fpr + (1 - tpr)) / 2).min()
-        low = tpr[np.where(fpr < 0.01)[0][-1]] if np.any(fpr < 0.01) else 0.0
-        
-        auc_list.append(auc)
-        acc_list.append(acc)
-        low_list.append(low)
-    
-    id_accs = np.mean(i_wms.squeeze(), axis=0).tolist()
+        tpr1 = tpr[np.where(fpr < 0.01)[0][-1]] if np.any(fpr < 0.01) else 0.0
+        auc_list.append(float(auc))
+        tpr1_list.append(float(tpr1))
 
-    results = {}
-    for metric_name, values in zip(
-        ["AUC", "MaxAcc", "TPR@1%FPR", "Id-Acc"],
-        [auc_list, acc_list, low_list, id_accs]
-    ):
-        results[metric_name] = values + [np.mean(values)]
-    
+    id_accs = np.mean(i_wms.astype(np.float32), axis=0).tolist()
+    bit_accs = np.mean(b_wms.astype(np.float32), axis=0).tolist()
+
+    # Tables
+    table_verify = PrettyTable()
+    table_verify.field_names = ["Metric"] + case_names + ["Mean"]
+    table_verify.add_row(["AUC"] + [f"{v:.3f}" for v in auc_list] + [f"{np.mean(auc_list):.3f}"])
+    table_verify.add_row(["TPR@1%FPR"] + [f"{v:.3f}" for v in tpr1_list] + [f"{np.mean(tpr1_list):.3f}"])
+
+    table_identify = PrettyTable()
+    table_identify.field_names = ["Metric"] + case_names + ["Mean"]
+    table_identify.add_row(["PerfectMatch"] + [f"{v:.3f}" for v in id_accs] + [f"{np.mean(id_accs):.3f}"])
+    table_identify.add_row(["BitAcc"] + [f"{v:.3f}" for v in bit_accs] + [f"{np.mean(bit_accs):.3f}"])
+
     print()
-    print("#" * 60)
-    print("Table 1: Verification Performance")
-    table = PrettyTable()
-    table.field_names = ["WM Type"] + case_names
-    table.add_row([args.wm_type] + [f"{v:.3f}" for v in results["TPR@1%FPR"]])
-    print(table)
+    print('#' * 60)
+    print('Verification Metrics (semantic)')
+    print(table_verify)
+    print()
+    print('#' * 60)
+    print('Identification Metrics')
+    print(table_identify)
     print()
 
-    print("#" * 60)
-    print("Table 2: Identification Accuracy")
-    table = PrettyTable()
-    table.field_names = ["WM Type"] + case_names
-    table.add_row([args.wm_type] + [f"{v:.3f}" for v in results["Id-Acc"]])
-    print(table)
-    print()
-    
+    # Save both tables to a single txt file
+    out_txt = os.path.join(save_dir, f"metrics_{args.wm_type}.txt")
+    with open(out_txt, 'w') as f:
+        f.write('Verification Metrics (semantic)\n')
+        f.write(table_verify.get_string())
+        f.write('\n\n')
+        f.write('Identification Metrics\n')
+        f.write(table_identify.get_string())
+        f.write('\n')
+    print(f'[Saved] {out_txt}')
+
 
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="")
-    parser.add_argument("--wm_type", required=True, help="Choose watermarking methods")
+    parser.add_argument("--wm_type", required=True, choices=["Tree-Ring","RingID","HSTR","HSQR","METR"], help="Choose watermarking methods")
     parser.add_argument("--dataset_id", choices=["coco", "Gustavo", "DB1k"], required=True, help="Choose dataset_id")
     parser.add_argument("--output_dir", default="outputs", help="output directory: ./[output_dir]/")
     args = parser.parse_args()

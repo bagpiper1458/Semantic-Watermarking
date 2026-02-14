@@ -29,7 +29,7 @@ def main(args):
     np.save(os.path.join(save_dir, f"identify_gt_indices_{num_dataset}.npy"), identify_gt_indices)
     
     # [Stable-Diffusion-v2-1-base Settings]
-    model_id = "stabilityai/stable-diffusion-2-1-base"
+    model_id = "SagiPolaczek/stable-diffusion-2-1-base"
     resolution = 512
     torch_dtype = torch.float32
 
@@ -43,6 +43,10 @@ def main(args):
     if args.wm_type == "Tree-Ring":
         masks = tree_masks
         Fourier_watermark_pattern_list = [make_Fourier_treering_pattern(pipe, shape, this_w_seed) for this_w_seed in w_seed_list]
+    elif args.wm_type == "METR":
+        # Discretized rings (METR): key_index encodes (RADIUS - RADIUS_CUTOFF) bits
+        masks = metr_masks
+        Fourier_watermark_pattern_list = [make_Fourier_metr_pattern(shape, key_index=i) for i in range(wm_capacity)]
     elif args.wm_type == "RingID":
         # Following the official RingID implementation
         masks = ringid_masks
@@ -98,7 +102,7 @@ def main(args):
             # get random latents ~ N(0,I)
             no_watermark_latents = get_random_latents(pipe, batch_size=batch_size_actual) # (N,4,64,64)
             # watermark injection
-            if args.wm_type in ["Tree-Ring", "RingID"]:
+            if args.wm_type in ["Tree-Ring", "METR", "RingID"]:
                 Fourier_watermark_latents, _ = inject_wm(no_watermark_latents, pattern_gt_batch, masks, cut_real=True, device=device)
             elif args.wm_type == "HSTR":
                 Fourier_watermark_latents, _ = inject_wm(no_watermark_latents, pattern_gt_batch, masks, center=True, cut_real=False, device=device)
@@ -123,7 +127,7 @@ def main(args):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="")
-    parser.add_argument("--wm_type", choices=["Tree-Ring", "RingID", "HSTR", "HSQR"], required=True, help="Choose semantic watermarking methods following merged-in-generation scheme")
+    parser.add_argument("--wm_type", choices=["Tree-Ring", "RingID", "HSTR", "HSQR", "METR"], required=True, help="Choose semantic watermarking methods following merged-in-generation scheme")
     parser.add_argument("--dataset_id", choices=["coco", "Gustavo", "DB1k"], required=True, help="Choose dataset_id")
     parser.add_argument("--output_dir", default="outputs", help="output directory: ./[output_dir]/")
     args = parser.parse_args()

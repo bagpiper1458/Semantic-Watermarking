@@ -156,6 +156,12 @@ tree_masks[:, TREE_WATERMARK_CHANNEL] = single_channel_tree_watermark_mask # (64
 ringid_masks[:, RING_WATERMARK_CHANNEL] = single_channel_ring_watermark_mask # (64,64)
 ringid_masks[:, HETER_WATERMARK_CHANNEL] = single_channel_heter_watermark_mask # (64,64)
 
+# [METR] Single-channel ring watermark (discretized rings)
+METR_WATERMARK_CHANNEL = TREE_WATERMARK_CHANNEL
+metr_masks = torch.zeros(shape, dtype=torch.bool)  # (1,4,64,64)
+metr_masks[:, METR_WATERMARK_CHANNEL] = single_channel_ring_watermark_mask  # (64,64)
+watermark_region_mask_metr = single_channel_ring_watermark_mask[None, ...].to(device)  # (1,64,64)
+
 # ====================================================================================================
 # [Random Seed]
 def set_random_seed(seed=0):
@@ -329,6 +335,33 @@ def make_Fourier_ringid_pattern(pipe, shape, key_value_combination,
                     (1 - channel_mask) * watermarked_latents_fft[batch_index, channel_id].imag + channel_mask * w_content[batch_index][channel_id].imag
     return watermarked_latents_fft
 
+def make_Fourier_metr_pattern(shape, key_index, strength=64, radius=RADIUS, radius_cutoff=RADIUS_CUTOFF, w_channel=TREE_WATERMARK_CHANNEL):
+    """METR-style semantic watermark: discretize concentric rings to ±strength.
+
+    key_index encodes a (radius - radius_cutoff)-bit message (MSB→LSB).
+    Watermark is placed on a single channel (default: TREE_WATERMARK_CHANNEL = [3])
+    over the annulus r ∈ (radius_cutoff, radius].
+
+    Note: we apply w = FFT(IFFT(w).real) so the pattern corresponds to a real spatial latent;
+    this makes it consistent with inject_wm(..., cut_real=True).
+    """
+    num_bits = radius - radius_cutoff
+    assert 0 <= key_index < 2 ** num_bits
+
+    bits = [(key_index >> b) & 1 for b in range(num_bits - 1, -1, -1)]  # MSB -> LSB
+    ch = w_channel[0] if isinstance(w_channel, (list, tuple)) else int(w_channel)
+
+    w = torch.zeros(shape, dtype=torch.complex64)
+    radius_list = list(range(radius, radius_cutoff, -1))  # e.g., 14..4 (11 rings)
+    for bit, r_out in zip(bits, radius_list):
+        m = torch.tensor(ring_mask(size=shape[-1], r_out=r_out, r_in=r_out - 1), dtype=torch.bool)
+        val = float(strength if bit == 1 else -strength)
+        w[:, ch].real[m] = val
+        w[:, ch].imag[m] = val
+
+    w = fft(ifft(w).real)
+    return w
+
 # HSQR - hermitian symmetric QR pattern
 class QRCodeGenerator:
     def __init__(self, box_size=2, border=1, qr_version=1):
@@ -482,6 +515,8 @@ def image_distortion(img1, img2, seed,
                      vaec_quality = None,
                      center_crop_area_ratio = None,
                      random_crop_area_ratio = None,
+                     r_degree = None,
+                     crop_scale_area_ratio = None,
                      ):
     if brightness_factor is not None:
         if img1 is not None:
@@ -550,6 +585,25 @@ def image_distortion(img1, img2, seed,
         if img1 is not None:
             img1 = random_crop_transforms(img1)
         img2 = random_crop_transforms(img2)
+
+    # Rotation (keep original size)
+    if r_degree is not None:
+        if img1 is not None:
+            img1 = img1.rotate(r_degree, resample=Image.BICUBIC, expand=False)
+        img2 = img2.rotate(r_degree, resample=Image.BICUBIC, expand=False)
+
+    # Cropping & Scaling (crop to area_ratio then resize back)
+    if crop_scale_area_ratio is not None:
+        assert 0 < crop_scale_area_ratio <= 1.0
+        w, h = img2.size
+        crop_size = int(round(w * (crop_scale_area_ratio ** 0.5)))
+        crop_size = max(1, min(crop_size, w, h))
+        left = (w - crop_size) // 2
+        top = (h - crop_size) // 2
+        box = (left, top, left + crop_size, top + crop_size)
+        if img1 is not None:
+            img1 = img1.crop(box).resize((w, h), resample=Image.BICUBIC)
+        img2 = img2.crop(box).resize((w, h), resample=Image.BICUBIC)
     return [img1, img2]
 
 # ====================================================================================================
