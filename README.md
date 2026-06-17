@@ -401,7 +401,13 @@ Official SFWMark resources:
 - Paper: https://openaccess.thecvf.com/content/ICCV2025/html/Lee_Semantic_Watermarking_Reinvented_Enhancing_Robustness_and_Generation_Quality_with_Fourier_ICCV_2025_paper.html
 - arXiv: https://arxiv.org/abs/2509.07647
 
-The original SFWMark project also builds on and acknowledges Tree-Ring, RingID, ZoDiac, invisible-watermark, Stable Signature, and Gaussian Shading.
+Additional methods and codebases used or compared in these experiments include:
+
+- Tree-Ring: https://github.com/YuxinWenRick/tree-ring-watermark
+- RingID: https://github.com/showlab/RingID
+- METR: local experiment method added in this fork for the survey-paper experiments
+
+The original SFWMark project also acknowledges ZoDiac, invisible-watermark, Stable Signature, and Gaussian Shading.
 
 ## Citation
 
