@@ -55,6 +55,26 @@ bash install.sh
 If you encounter any _version compatibility issues_ during installation, please refer to `requirements-lock.txt` in the repository.  
 It contains the full output of `pip freeze` with all dependencies included.
 
+## Research Fork: Semantic Watermarking Experiments
+This fork keeps the original SFWMark implementation intact and adds the experiment code used for fixed-key semantic watermarking research.
+
+Added experiment entry points:
+- `src/generate_fixed_key.py`: fixed-key generation that can reuse an existing clean image set and pattern list through symlinks.
+- `src/generate_fixed_key_fast.py`: fixed-key generation that builds or reuses `pattern_list-2048.pt` inside the target output folder.
+- `src/detect_avg_attack.py`: detection/evaluation wrapper for clean-only or externally attacked images, with optional folder overrides and reduced disk output.
+- `src/detect.py`: extended detector with `METR`, fixed-key-safe trial counts, optional inverted-latent saving, and faster single-channel identification.
+
+The large generated folders, such as `outputs/` and `outputs_fixedkey_k0/`, are intentionally ignored by Git. Regenerate them from the scripts instead of uploading them.
+
+For the paper experiment workflow, start here:
+
+```bash
+bash scripts/run_paper_pipeline.sh HSQR coco outputs
+bash scripts/run_fixed_key_pipeline.sh Tree-Ring coco 0 outputs_fixedkey_k0
+```
+
+See [`docs/semantic_watermarking_experiments.md`](docs/semantic_watermarking_experiments.md) and [`src/README.md`](src/README.md) for the full command map.
+
 ## ⚡ Quick Start
 We provide a script for **fast watermark embedding and detection** to simplify the usage.  
 It evaluates both:  

@@ -20,9 +20,9 @@ def main(args):
     meta_annot, prompt_key, gt_folder = get_text_dataset(args.dataset_id)
 
     # [Evaluation Settings]
-    detect_trials = 1000
+    detect_trials = 5000
     RANGE_EVAL = range(0,detect_trials)
-    
+
     # 1. CLIP
     # [Load CLIP model]
     reference_model = "ViT-g-14"
@@ -42,7 +42,7 @@ def main(args):
         img_pils_wm_batch = [Image.open(os.path.join(save_dir, f"img_pil_wm/{idx}.png")) for idx in batch_indices]
         clip_values["img_pil"].append(get_clip_score(img_pils_batch, text_prompts, ref_model, ref_clip_preprocess, ref_tokenizer, device=device).cpu().numpy()) # (N,)
         clip_values["img_pil_wm"].append(get_clip_score(img_pils_wm_batch, text_prompts, ref_model, ref_clip_preprocess, ref_tokenizer, device=device).cpu().numpy()) # (N,)
-    
+
     # Save CLIP results
     clip_values["img_pil"] = np.concatenate(clip_values["img_pil"])
     clip_values["img_pil_wm"] = np.concatenate(clip_values["img_pil_wm"])
@@ -53,7 +53,7 @@ def main(args):
     print("=" * 50)
     print(f"CLIP img_pil : {img_pil_clip_mean:.3f}")
     print(f"CLIP img_pil_wm : {img_pil_wm_clip_mean:.3f}")
-    
+
     # 2. FID
     # [FID Settings] only coco has reference images (gt_folder)
     if args.dataset_id == "coco":
@@ -77,4 +77,4 @@ if __name__ == "__main__":
     parser.add_argument("--output_dir", default="outputs", help="output directory: ./[output_dir]/")
     args = parser.parse_args()
     main(args)
-    
+

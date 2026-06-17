@@ -335,31 +335,64 @@ def make_Fourier_ringid_pattern(pipe, shape, key_value_combination,
                     (1 - channel_mask) * watermarked_latents_fft[batch_index, channel_id].imag + channel_mask * w_content[batch_index][channel_id].imag
     return watermarked_latents_fft
 
-def make_Fourier_metr_pattern(shape, key_index, strength=64, radius=RADIUS, radius_cutoff=RADIUS_CUTOFF, w_channel=TREE_WATERMARK_CHANNEL):
-    """METR-style semantic watermark: discretize concentric rings to ±strength.
-
-    key_index encodes a (radius - radius_cutoff)-bit message (MSB→LSB).
-    Watermark is placed on a single channel (default: TREE_WATERMARK_CHANNEL = [3])
-    over the annulus r ∈ (radius_cutoff, radius].
-
-    Note: we apply w = FFT(IFFT(w).real) so the pattern corresponds to a real spatial latent;
-    this makes it consistent with inject_wm(..., cut_real=True).
+def make_Fourier_metr_pattern(
+    shape,
+    key_index,
+    strength=100,
+    radius=RADIUS,
+    radius_cutoff=RADIUS_CUTOFF,
+    w_channel=TREE_WATERMARK_CHANNEL,
+    imag_mode="zero",  # "zero" (較像官方METR) or "same" (real/imag同值)
+):
     """
+    METR-style discretized rings on annulus r=(radius_cutoff+1 .. radius).
+
+    - num_bits = radius - radius_cutoff  (e.g., 14-3 = 11 => 2048 candidates)
+    - bits are mapped from inner->outer by default (MSB at inner band, LSB at outer band)
+    - imag_mode:
+        * "zero": write complex(val, 0) (更貼近官方METR行為)  [推薦用來「重現」]
+        * "same": write complex(val, val) then project via fft(ifft(w).real)
+    """
+    assert len(shape) == 4, f"shape should be (B,C,H,W), got {shape}"
+    B, C, H, W = shape
+    assert H == W, "expects square FFT plane"
+    assert B == 1, "pattern template expected B=1; batch is formed later by stacking/repeat"
+
     num_bits = radius - radius_cutoff
-    assert 0 <= key_index < 2 ** num_bits
+    assert 0 <= key_index < (1 << num_bits), f"key_index out of range for {num_bits} bits"
+    ch = int(w_channel[0] if isinstance(w_channel, (list, tuple)) else w_channel)
+    assert 0 <= ch < C, f"channel {ch} out of range (C={C})"
 
-    bits = [(key_index >> b) & 1 for b in range(num_bits - 1, -1, -1)]  # MSB -> LSB
-    ch = w_channel[0] if isinstance(w_channel, (list, tuple)) else int(w_channel)
+    # MSB -> LSB (format() 同方向)
+    bitstr = format(int(key_index), f"0{num_bits}b")
+    bits = [1 if b == "1" else 0 for b in bitstr]
 
-    w = torch.zeros(shape, dtype=torch.complex64)
-    radius_list = list(range(radius, radius_cutoff, -1))  # e.g., 14..4 (11 rings)
-    for bit, r_out in zip(bits, radius_list):
-        m = torch.tensor(ring_mask(size=shape[-1], r_out=r_out, r_in=r_out - 1), dtype=torch.bool)
+    w = torch.zeros(shape, dtype=torch.complex64)  # stays on CPU; moved to GPU in inject_wm
+    size = W
+
+    # inner -> outer : radii = (radius_cutoff+1 .. radius), i.e., 4..14
+    radii = list(range(radius_cutoff + 1, radius + 1))
+    assert len(radii) == num_bits
+
+    for bit, r_out in zip(bits, radii):
+        r_in = r_out - 1
+        outer = torch.tensor(circle_mask(size=size, r=r_out), dtype=torch.bool)
+        inner = torch.tensor(circle_mask(size=size, r=r_in),  dtype=torch.bool)
+        annulus = (outer & ~inner)  # (64,64) bool
+
         val = float(strength if bit == 1 else -strength)
-        w[:, ch].real[m] = val
-        w[:, ch].imag[m] = val
 
-    w = fft(ifft(w).real)
+        if imag_mode == "zero":
+            w[:, ch, annulus] = complex(val, 0.0)
+        elif imag_mode == "same":
+            w[:, ch, annulus] = complex(val, val)
+        else:
+            raise ValueError(f"Unknown imag_mode={imag_mode}")
+
+    # 若你選擇 real/imag 都塞值，這時 w 不一定對應到實數空間訊號，做一次投影最保險
+    if imag_mode == "same":
+        w = fft(ifft(w).real)
+
     return w
 
 # HSQR - hermitian symmetric QR pattern

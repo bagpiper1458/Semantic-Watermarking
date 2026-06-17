@@ -27,7 +27,7 @@ def main(args):
     w_seed_list = [*range(w_seed, w_seed + wm_capacity)] # 2048 seed numbers
     identify_gt_indices = np.random.choice(wm_capacity, size=num_dataset).tolist()
     np.save(os.path.join(save_dir, f"identify_gt_indices_{num_dataset}.npy"), identify_gt_indices)
-    
+
     # [Stable-Diffusion-v2-1-base Settings]
     model_id = "SagiPolaczek/stable-diffusion-2-1-base"
     resolution = 512
@@ -46,7 +46,8 @@ def main(args):
     elif args.wm_type == "METR":
         # Discretized rings (METR): key_index encodes (RADIUS - RADIUS_CUTOFF) bits
         masks = metr_masks
-        Fourier_watermark_pattern_list = [make_Fourier_metr_pattern(shape, key_index=i) for i in range(wm_capacity)]
+        # imag_mode="zero" matches METR reference: ring values are real (+/- strength) in Fourier space
+        Fourier_watermark_pattern_list = [make_Fourier_metr_pattern(shape, key_index=i, imag_mode="zero") for i in range(wm_capacity)]
     elif args.wm_type == "RingID":
         # Following the official RingID implementation
         masks = ringid_masks
@@ -66,13 +67,13 @@ def main(args):
     elif args.wm_type == "HSTR":
         masks = tree_masks
         masks[:, HETER_WATERMARK_CHANNEL] = single_channel_heter_watermark_mask # (64,64) RounderRingMask for Hetero Watermark (noise)
-        Fourier_watermark_pattern_list = [make_Fourier_treering_pattern(pipe, shape, this_w_seed, 
+        Fourier_watermark_pattern_list = [make_Fourier_treering_pattern(pipe, shape, this_w_seed,
             hs=True, center=True, heter=True) for this_w_seed in w_seed_list]
     elif args.wm_type == "HSQR":
         assert box_size == 2
         Fourier_watermark_pattern_list = [make_hsqr_pattern(idx=this_w_seed) for this_w_seed in w_seed_list]
     assert len(Fourier_watermark_pattern_list) == wm_capacity
-    
+
     # [Save Fourier_watermark_pattern_list]
     torch.save(torch.stack(Fourier_watermark_pattern_list, 0).detach(), os.path.join(save_dir, f"pattern_list-{wm_capacity}.pt"))
 
@@ -108,15 +109,15 @@ def main(args):
                 Fourier_watermark_latents, _ = inject_wm(no_watermark_latents, pattern_gt_batch, masks, center=True, cut_real=False, device=device)
             elif args.wm_type == "HSQR":
                 Fourier_watermark_latents = inject_hsqr(no_watermark_latents, pattern_gt_batch, center=True, device=device)
-            
+
             # generate images
             batched_latents = torch.cat([no_watermark_latents, Fourier_watermark_latents], dim=0) # (2N,4,64,64)
             generated_images = pipe(gen_prompts*2, latents=batched_latents, guidance_scale=7.5,
                 num_inference_steps=50, num_images_per_prompt=1).images
-            
+
             # [Free GPU Memory]
             torch.cuda.empty_cache()
-        
+
         # Save images
         img_pils, img_pil_wms = generated_images[:batch_size_actual], generated_images[batch_size_actual:]
         for i, idx in enumerate(batch_indices):
@@ -132,4 +133,4 @@ if __name__ == "__main__":
     parser.add_argument("--output_dir", default="outputs", help="output directory: ./[output_dir]/")
     args = parser.parse_args()
     main(args)
-    
+

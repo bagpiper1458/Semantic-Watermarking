@@ -8,6 +8,8 @@ docs/static/png
 src/text_dataset/
 outputs/
 quick_outputs/
+outputs_fixedkey*/
+outputs_*/
 
 # Python files
 z/
@@ -15,6 +17,22 @@ z/
 # iccv2025_main.py
 # test.py
 src/quick_start.py
+
+# Experiment artifacts
+*.npy
+*.npz
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.tgz
+*.tar
+*.tar.gz
+
+# Local runtime files
+.cache/
+.ipynb_checkpoints/
+wandb/
 
 # etc
 # requirements.txt
