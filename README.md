@@ -1,17 +1,15 @@
 <div align="center">
-<h1>🧼 SFW: Symmetric Fourier Watermarking </h1>
-<!-- <h3>Semantic Watermarking Reinvented </h3> -->
-<h3>Semantic Watermarking Reinvented - ICCV 2025 </h3>
+<h1>Semantic Watermarking Experiment Fork</h1>
+<h3>Survey-paper experiments based on SFWMark</h3>
 
-[Sung Ju Lee](https://github.com/thomas11809), &nbsp; 
-[Nam Ik Cho](https://scholar.google.co.kr/citations?user=Ntx5VRIAAAAJ&hl=ko&oi=ao)
+This repository is an **unofficial research fork** of SFWMark. It contains local modifications and experiment scripts used for semantic watermarking experiments in a survey-paper project.
 
-<!-- Department of ECE,&nbsp; 
-INMC,&nbsp;  -->
-Seoul National University, South Korea
+Original SFWMark paper and code by
+[Sung Ju Lee](https://github.com/thomas11809) and [Nam Ik Cho](https://scholar.google.co.kr/citations?user=Ntx5VRIAAAAJ&hl=ko&oi=ao), Seoul National University.
 
-[![Project Page](https://img.shields.io/badge/Project-Page-brightgreen)](https://thomas11809.github.io/SFWMark/) &nbsp; 
-[![arXiv](https://img.shields.io/badge/arXiv-2509.07647-b31b1b.svg)](https://arxiv.org/abs/2509.07647)
+[![Original Project Page](https://img.shields.io/badge/Original-Project_Page-brightgreen)](https://thomas11809.github.io/SFWMark/) &nbsp;
+[![Original Code](https://img.shields.io/badge/Original-Code-black)](https://github.com/thomas11809/SFWMark) &nbsp;
+[![arXiv](https://img.shields.io/badge/arXiv-2509.07647-b31b1b.svg)](https://arxiv.org/abs/2509.07647) &nbsp;
 [![Paper](https://img.shields.io/badge/Paper-ICCV-blue.svg)](https://openaccess.thecvf.com/content/ICCV2025/html/Lee_Semantic_Watermarking_Reinvented_Enhancing_Robustness_and_Generation_Quality_with_Fourier_ICCV_2025_paper.html)
 
 <p align="center"> <img src="docs/static/images/SFW_logo.png" width="300px"> </p>
@@ -27,36 +25,38 @@ Seoul National University, South Korea
 
 ---
 
-This repository contains the official PyTorch implementation of the paper:  
-_**"Semantic Watermarking Reinvented: Enhancing Robustness and Generation Quality with Fourier Integrity"**_  
-([📄Accepted at ICCV 2025]()).
+## Important Notice
+
+This repository is **not** the official implementation of _"Semantic Watermarking Reinvented: Enhancing Robustness and Generation Quality with Fourier Integrity"_ and is **not maintained by the ICCV 2025 paper authors**. The official upstream repository is [`thomas11809/SFWMark`](https://github.com/thomas11809/SFWMark).
+
+This fork preserves the upstream codebase and adds experiment scripts for semantic watermarking research, including fixed-key deployment experiments, METR-related changes, additional detection options, and workflow documentation.
 
 ## 🧭 Overview
 <p align="left"><img src="docs/static/images/fig_trade-off.png" width="600"></p>
 
-We propose a novel watermarking framework for latent diffusion models that enhances both **robustness** and **image fidelity**. 
+The original SFWMark paper proposes a watermarking framework for latent diffusion models that enhances both **robustness** and **image fidelity**.
 
-> 🧠 **Built on Semantic Watermarking**  
-> &nbsp; &nbsp; &nbsp; ✅ Merged-in-generation scheme  
-> &nbsp; &nbsp; &nbsp; ✅ Fourier domain embedding  
+> 🧠 **Built on Semantic Watermarking**
+> &nbsp; &nbsp; &nbsp; ✅ Merged-in-generation scheme
+> &nbsp; &nbsp; &nbsp; ✅ Fourier domain embedding
 > &nbsp; &nbsp; &nbsp; ✅ Center-aware design
 
 ## 📦 Installation
 This project is based on an Anaconda virtual environment.
 
 ```bash
-git clone https://github.com/thomas11809/SFWMark.git
-cd SFWMark
+git clone https://github.com/bagpiper1458/Semantic-Watermarking.git
+cd Semantic-Watermarking
 conda create -n sfw python=3.10 -y
 conda activate sfw
 bash install.sh
 ```
 
-If you encounter any _version compatibility issues_ during installation, please refer to `requirements-lock.txt` in the repository.  
+If you encounter any _version compatibility issues_ during installation, please refer to `requirements-lock.txt` in the repository.
 It contains the full output of `pip freeze` with all dependencies included.
 
 ## Research Fork: Semantic Watermarking Experiments
-This fork keeps the original SFWMark implementation intact and adds the experiment code used for fixed-key semantic watermarking research.
+This fork keeps the original SFWMark implementation intact and adds experiment code for fixed-key semantic watermarking research. These additions are separate from the original SFWMark paper unless explicitly stated.
 
 Added experiment entry points:
 - `src/generate_fixed_key.py`: fixed-key generation that can reuse an existing clean image set and pattern list through symlinks.
@@ -76,8 +76,8 @@ bash scripts/run_fixed_key_pipeline.sh Tree-Ring coco 0 outputs_fixedkey_k0
 See [`docs/semantic_watermarking_experiments.md`](docs/semantic_watermarking_experiments.md) and [`src/README.md`](src/README.md) for the full command map.
 
 ## ⚡ Quick Start
-We provide a script for **fast watermark embedding and detection** to simplify the usage.  
-It evaluates both:  
+We provide a script for **fast watermark embedding and detection** to simplify the usage.
+It evaluates both:
 - The **CLIP score** of generated images, and
 - The performance of watermark **verification and identification**
 ```bash
@@ -87,22 +87,22 @@ python quick_start.py \
   --wm_type HSQR \
   --attacks "JPEG" "Diffusion" "CC" "RC"
 ```
-The detection output includes the **L1 distance**, which indicates watermark presence.  
-Our methods (*HSTR* and *HSQR*) show a larger distance gap between clean and watermarked images compared to the baselines — indicating a more **robust** and **secure** design for detection.
+The detection output includes the **L1 distance**, which indicates watermark presence.
+In the original SFWMark paper, the SFWMark methods (*HSTR* and *HSQR*) show a larger distance gap between clean and watermarked images compared to the baselines.
 
-Input arguments:  
+Input arguments:
 - `--prompt`: Text prompt used for image generation.
 - `--wm_type`: Select the watermarking method. Supports two baselines and two proposed methods. See the [supporting methods](https://github.com/thomas11809/SFWMark?tab=readme-ov-file#-baselines) for details.
-- `--attacks`: Choose from the following perturbations to apply before detection: 
+- `--attacks`: Choose from the following perturbations to apply before detection:
 `"Brightness" "Contrast" "JPEG" "Blur" "Noise" "BM3D" "VAE-B" "VAE-C" "Diffusion" "CC" "RC"`
 - `--output_dir`: Directory to save output images.
 - `--threshold`: Manually set a classification threshold for watermark detection.
 
-## 🔍 Methods
+## 🔍 Original SFWMark Methods
 
 <p align="left"><img src="docs/static/images/fig_concept-1.png" width="1000"></p>
 
-Our method improves semantic watermarking by:
+The original SFWMark method improves semantic watermarking by:
 - Introducing **Hermitian Symmetric Fourier Watermarking (SFW)** to preserve frequency integrity and reduce artifacts
 - Applying **center-aware embedding** to improve robustness against cropping attacks
 
@@ -121,7 +121,7 @@ This approach outperforms existing methods across various attack scenarios (e.g.
 
 ### 🗂️ Datasets
 ---
-We evaluate our method on the following text-to-image prompt datasets:
+The original SFWMark paper evaluates the method on the following text-to-image prompt datasets:
 - coco: 5,000 samples from MS-COCO captions
 - Gustavo: 8,192 samples from SD-Prompts
 - DB1k: 1,001 samples from DiffusionDB-1k
@@ -132,7 +132,7 @@ After downloading, unzip the file and **place its contents in**: `src/text_datas
 
 ### 🔁 Reproducing Results
 ---
-The main experimental results in the paper can be reproduced using the following scripts:
+The main experimental results from the upstream SFWMark paper can be reproduced using the following scripts:
 ```bash
 cd src
 
@@ -145,7 +145,7 @@ python results/results_gen.py
 
 ### 🚀 Usage
 ---
-To run the entire pipeline **from scratch**, use the following commands in sequence.  
+To run the entire pipeline **from scratch**, use the following commands in sequence.
 Results will be saved in the `outputs/` directory by default.
 You can change the output location using the `--output_dir` argument.
 
@@ -153,7 +153,7 @@ You can change the output location using the `--output_dir` argument.
 cd src
 
 # 1. Generate watermarked samples (5000 for COCO)
-python generate.py --wm_type HSQR --dataset_id coco 
+python generate.py --wm_type HSQR --dataset_id coco
 
 # 2. Compute FID (for COCO) and CLIP scores
 python metric.py --wm_type HSQR --dataset_id coco
@@ -165,15 +165,15 @@ python diff_attack/diff_wm_attack.py --wm_type HSQR --dataset_id coco
 python detect.py --wm_type HSQR --dataset_id coco
 ```
 
-This example demonstrates how to reproduce results using the `HSQR` watermarking method.  
-You can also try other semantic watermarking techniques compatible with this pipeline using the `--wm_type` argument.  
+This example demonstrates how to reproduce results using the `HSQR` watermarking method.
+You can also try other semantic watermarking techniques compatible with this pipeline using the `--wm_type` argument.
 (All of them are based on the **merged-in-generation** paradigm.)
 
 #### 📌 Baselines
 - `Tree-Ring`
 - `RingID`
 
-#### ✨ Ours
+#### ✨ Original SFWMark methods
 - `HSTR`
 - `HSQR`
 
@@ -181,12 +181,12 @@ You can also try other semantic watermarking techniques compatible with this pip
 <p align="left"><img src="docs/static/images/fig_concept-2.png" width="1000"></p>
 
 ## ✅ To Be Done
-✅ Provide a **Quick Start** script for fast watermark embedding and detection.  
-⬜️ Add [Usage] support for *Zodiac*, the post-hoc semantic watermarking baseline used in the paper.  
-⬜️ Add [Usage] support for bitstream-based methods used as baselines in the paper (*DwtDct, DwtDctSvd, RivaGAN, Stable Signature, Gaussian Shading*).  
+✅ Provide a **Quick Start** script for fast watermark embedding and detection.
+⬜️ Add [Usage] support for *Zodiac*, the post-hoc semantic watermarking baseline used in the paper.
+⬜️ Add [Usage] support for bitstream-based methods used as baselines in the paper (*DwtDct, DwtDctSvd, RivaGAN, Stable Signature, Gaussian Shading*).
 
 ## 📝 Citation
-If you find this work useful, please consider citing our paper:
+If you use the original SFWMark method or code, please cite the original SFWMark paper:
 ```
 @inproceedings{lee2025semantic,
   title={Semantic Watermarking Reinvented: Enhancing Robustness and Generation Quality with Fourier Integrity},
@@ -197,15 +197,14 @@ If you find this work useful, please consider citing our paper:
 }
 ```
 
-## 📄 License & Contact
-This repository is licensed under the **CC BY-NC 4.0** license.  
-You are free to use this code for research and non-commercial purposes only.  
-For commercial licensing requests, please contact the authors.
+## 📄 License & Attribution
+This fork preserves the upstream **CC BY-NC 4.0** license.
+You are free to use this code for research and non-commercial purposes only, subject to the upstream license terms.
 
-📫 If you have any questions or inquiries, please contact: **thomas11809@snu.ac.kr**
+For questions about the original SFWMark paper or official implementation, refer to the upstream project: [`thomas11809/SFWMark`](https://github.com/thomas11809/SFWMark).
 
 ## 🙏 Acknowledgement
-This project is based on the following projects. We thank the authors for releasing their great work as open-source.
+This fork is based on the official SFWMark repository. The original SFWMark project acknowledges the following projects:
 - [Tree-Ring Watermarks: Fingerprints for Diffusion Images that are Invisible and Robust](https://github.com/YuxinWenRick/tree-ring-watermark)
 - [RingID: Rethinking Tree-Ring Watermarking for Enhanced Multi-Key Identification](https://github.com/showlab/RingID)
 - [Attack-Resilient Image Watermarking Using Stable Diffusion](https://github.com/zhanglijun95/ZoDiac)

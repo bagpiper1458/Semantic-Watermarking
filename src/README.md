@@ -1,6 +1,8 @@
 # Source Entry Points
 
-This directory contains the runnable experiment code. Run commands from `src/` unless you use the wrapper scripts in `../scripts/`.
+This directory contains the runnable experiment code for this unofficial SFWMark-based research fork. Run commands from `src/` unless you use the wrapper scripts in `../scripts/`.
+
+The upstream SFWMark implementation is by Sung Ju Lee and Nam Ik Cho. The fixed-key, METR, and averaging-attack workflow additions in this fork are experiment utilities for semantic watermarking research.
 
 ## Main Pipeline
 

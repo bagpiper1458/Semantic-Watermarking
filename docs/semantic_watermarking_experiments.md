@@ -1,6 +1,8 @@
 # Semantic Watermarking Experiment Workflow
 
-This document describes the reproducible experiment layer in this fork. The upstream SFWMark code is preserved, and the added scripts focus on fixed-key semantic watermarking, averaging/removal-attack evaluation, and METR-style experiments.
+This document describes the reproducible experiment layer in this unofficial fork. The upstream SFWMark code is preserved and credited to the original authors; the added scripts focus on fixed-key semantic watermarking, averaging/removal-attack evaluation, and METR-style experiments for a survey-paper research project.
+
+This repository is not the official SFWMark repository. The official upstream project is [`thomas11809/SFWMark`](https://github.com/thomas11809/SFWMark).
 
 ## Repository Layout
 
@@ -36,8 +38,8 @@ Keep those files on the experiment machine or archive them separately.
 ## Environment
 
 ```bash
-git clone <your-github-repo-url>
-cd SFWMark
+git clone https://github.com/bagpiper1458/Semantic-Watermarking.git
+cd Semantic-Watermarking
 conda create -n sfw python=3.10 -y
 conda activate sfw
 bash install.sh
@@ -57,7 +59,19 @@ HSQR
 METR
 ```
 
-`METR` is an experiment method added in this fork. The other methods are inherited from the SFWMark evaluation pipeline.
+`METR` is an experiment method added in this fork. The other methods are inherited from the upstream SFWMark evaluation pipeline.
+
+## Attribution
+
+This experiment code is based on SFWMark:
+
+```text
+Semantic Watermarking Reinvented: Enhancing Robustness and Generation Quality with Fourier Integrity
+Sung Ju Lee and Nam Ik Cho
+ICCV 2025
+```
+
+If you use the original SFWMark method or code, cite the original paper and refer to the upstream repository for official documentation.
 
 ## Standard Multi-Key Pipeline
 

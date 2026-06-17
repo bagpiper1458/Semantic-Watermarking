@@ -5,27 +5,27 @@
   <meta charset="utf-8">
   <!-- Meta tags for social media banners, these should be filled in appropriatly as they are your "business card" -->
   <!-- Replace the content tag with appropriate information -->
-  <meta name="description" content="Project page for Symmetric Fourier Watermarking (SFW), a novel semantic watermarking technique for latent diffusion models, combining Hermitian symmetry and center-aware design for robust and high-fidelity generation.">
-  <meta property="og:title" content="Symmetric Fourier Watermarking (SFW)" />
-  <meta property="og:description" content="A semantic watermarking method in the latent Fourier domain for AI-generated image." />
-  <meta property="og:url" content="https://thomas11809.github.io/SFWMark/" />
+  <meta name="description" content="Unofficial experiment fork based on SFWMark. The original Symmetric Fourier Watermarking project is by Sung Ju Lee and Nam Ik Cho.">
+  <meta property="og:title" content="Unofficial SFWMark Experiment Fork" />
+  <meta property="og:description" content="Survey-paper experiment fork based on the original SFWMark project." />
+  <meta property="og:url" content="https://github.com/bagpiper1458/Semantic-Watermarking" />
   <!-- Path to banner image, should be in the path listed below. Optimal dimenssions are 1200X630-->
   <meta property="og:image" content="static/images/SFW_logo.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
 
 
-  <meta name="twitter:title" content="Symmetric Fourier Watermarking (SFW)">
-  <meta name="twitter:description" content="Official project page for Symmetric Fourier Watermarking (SFW).">
+  <meta name="twitter:title" content="Unofficial SFWMark Experiment Fork">
+  <meta name="twitter:description" content="Survey-paper experiment fork based on the original SFWMark project.">
   <!-- Path to banner image, should be in the path listed below. Optimal dimenssions are 1200X600-->
   <meta name="twitter:image" content="static/images/SFW_logo.png">
   <meta name="twitter:card" content="static/images/SFW_logo.png">
-  <!-- Keywords for your paper to be indexed by-->
+  <!-- Keywords for search indexing -->
   <meta name="keywords" content="semantic watermarking, AI-generated image, latent diffusion models, tree-ring, ringid, stable signature, zodiac, gaussian shading, Hermitian symmetry, center-aware design">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
 
-  <title>SFW: Symmetric Fourier Watermarking</title>
+  <title>Unofficial SFWMark Experiment Fork</title>
   <link rel="icon" type="image/x-icon" href="static/images/SFW_favicon.ico">
   <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
 
@@ -45,6 +45,19 @@
 </head>
 
 <body>
+  <section class="hero is-warning is-small">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <p class="has-text-centered">
+          <strong>Unofficial fork notice:</strong>
+          This repository contains survey-paper experiment modifications based on SFWMark. It is not the official ICCV 2025 SFWMark project page and is not maintained by the original paper authors.
+          The official project is
+          <a href="https://github.com/thomas11809/SFWMark" target="_blank">thomas11809/SFWMark</a>.
+        </p>
+      </div>
+    </div>
+  </section>
+
   <section class="hero">
     <div class="hero-body">
       <div class="container is-max-desktop">
@@ -149,19 +162,19 @@
             <p>
               Semantic watermarking techniques for latent diffusion models (LDMs) are robust against regeneration
               attacks, but often suffer from detection performance degradation due to the loss of frequency integrity.
-              To tackle this problem, we propose a novel embedding method called Hermitian Symmetric Fourier
+              To tackle this problem, the original SFWMark paper proposes a novel embedding method called Hermitian Symmetric Fourier
               Watermarking (SFW), which maintains frequency integrity by enforcing Hermitian symmetry.
-              Additionally, we introduce a center-aware embedding strategy that reduces the vulnerability of semantic
+              Additionally, the paper introduces a center-aware embedding strategy that reduces the vulnerability of semantic
               watermarking due to cropping attacks by ensuring robust information retention.
-              To validate our approach, we apply these techniques to existing semantic watermarking schemes, enhancing
+              To validate the original SFWMark approach, the paper applies these techniques to existing semantic watermarking schemes, enhancing
               their frequency-domain structures for better robustness and retrieval accuracy.
-              Extensive experiments demonstrate that our methods achieve state-of-the-art verification and
+              Extensive experiments in the original paper demonstrate that the SFWMark methods achieve state-of-the-art verification and
               identification performance, surpassing previous approaches across various attack scenarios.
               Ablation studies confirm the impact of SFW on detection capabilities, the effectiveness of the
               center-aware embedding against cropping, and how message capacity influences identification accuracy.
-              Notably, our method achieves the highest detection accuracy while maintaining superior image fidelity, as
+              Notably, the original SFWMark method achieves the highest detection accuracy while maintaining superior image fidelity, as
               evidenced by FID and CLIP scores.
-              Conclusively, our proposed SFW is shown to be an effective framework for balancing robustness and image
+              Conclusively, the original SFW framework is shown to be an effective framework for balancing robustness and image
               fidelity, addressing the inherent trade-offs in semantic watermarking.
               Code available at <a href="https://github.com/thomas11809/SFWMark" target="_blank"
                 style="color: #1e90ff;">github.com/thomas11809/SFWMark</a>.
@@ -188,7 +201,7 @@
                     Semantic watermarking in the latent space offers a robust solution, especially due to its resilience against <strong>regeneration attacks</strong>, which often break pixel-level watermarks.
                     <br>However, existing methods often discard the imaginary part in the Fourier domain, breaking the <strong>frequency integrity</strong> required to maintain the statistical structure of latent noise. 
                     In particular, this violates the Hermitian symmetry necessary for real-valued latent signals, leading to distorted frequency patterns that simultaneously weaken detection robustness and degrade generative quality.
-                    <br>To address this issue, we propose a new approach that preserves frequency integrity while enabling reliable and high-quality watermarking.
+              <br>To address this issue, the original SFWMark paper proposes an approach that preserves frequency integrity while enabling reliable and high-quality watermarking.
                   </p>
                 </div>
                 <!-- <div class="column is-one-thirds"> -->
@@ -207,27 +220,27 @@
   <section class="hero is-small is-light">
     <div class="hero-body">
       <div class="container  is-max-desktop">
-        <h2 class="title is-3">Our Approach</h2>
+        <h2 class="title is-3">Original SFWMark Approach</h2>
         <div class="level-set has-text-justified">
           <p>
-          We introduce three key techniques to overcome the limitations of existing semantic watermarking methods.
+          The original SFWMark paper introduces three key techniques to overcome the limitations of existing semantic watermarking methods.
           </p>
-          <img src="static/images/fig_concept-1.png" alt="Our Approach" 
-          class="blend-img-background center-image" style="margin-top: 1rem; margin-bottom: 1rem;" />
+          <img src="static/images/fig_concept-1.png" alt="Original SFWMark approach"
+            class="blend-img-background center-image" style="margin-top: 1rem; margin-bottom: 1rem;" />
           <ol>
             <li>
               <strong>Hermitian Symmetric Fourier Watermarking (SFW):</strong><br>
-              By enforcing Hermitian symmetry in the latent Fourier domain, our method preserves frequency integrity and fully utilizes both real and imaginary components. 
+              By enforcing Hermitian symmetry in the latent Fourier domain, the original SFWMark method preserves frequency integrity and fully utilizes both real and imaginary components.
               This leads to stronger detection performance without sacrificing image quality.<br>
             </li>
             <li>
               <strong>Center-Aware Embedding Strategy:</strong><br>
-              We embed watermarks only in the central region of the latent space, which remains stable under spatial transformations. 
+              The method embeds watermarks only in the central region of the latent space, which remains stable under spatial transformations.
               This design greatly improves robustness against cropping attacks.<br>
             </li>
             <li>
               <strong>HSQR: Hermitian Symmetric QR Code:</strong><br>
-              We extend SFW to structured binary watermarks by splitting a QR code across the real and imaginary parts of the Fourier domain. 
+              The paper extends SFW to structured binary watermarks by splitting a QR code across the real and imaginary parts of the Fourier domain.
               This approach ensures high detection accuracy and message capacity, while preserving generative quality.<br>
             </li>
           </ol>
@@ -243,7 +256,7 @@
           <div class="content">
             <h2 class="title is-3">Experiments</h2>
             <p>
-              We evaluate our methods across a wide range of distortion scenarios, including signal, compression, regeneration, and cropping attacks.
+              The original SFWMark paper evaluates its methods across a wide range of distortion scenarios, including signal, compression, regeneration, and cropping attacks.
             </p>
           </div>
           <div id="results-carousel" class="carousel results-carousel" style="margin-top: 0rem; margin-bottom: 1rem;">
@@ -287,11 +300,11 @@
             <ol>
               <li>
                 <strong>Detection Performance</strong><br>
-                Our methods (HSTR and HSQR) consistently outperform prior techniques in both verification and identification tasks, demonstrating enhanced detection robustness against various attack types.
+                  The original SFWMark methods (HSTR and HSQR) consistently outperform prior techniques in both verification and identification tasks, demonstrating enhanced detection robustness against various attack types.
               </li>
               <li>
                 <strong>Generative Quality</strong><br>
-                Unlike high-energy methods like RingID, which introduce visible artifacts, our approach maintains high image fidelity thanks to frequency integrity preservation.
+                  Unlike high-energy methods like RingID, which introduce visible artifacts, the original SFWMark approach maintains high image fidelity thanks to frequency integrity preservation.
               </li>
               <li>
                 <strong>Ablation Study</strong>
@@ -300,7 +313,7 @@
                     Without Hermitian symmetry, detection performance drops significantly, confirming the core role of SFW.
                   </li>
                   <li>
-                    Our center-aware embedding improves robustness to cropping, maintaining high accuracy under spatial distortions.
+                  The original SFWMark center-aware embedding improves robustness to cropping, maintaining high accuracy under spatial distortions.
                   </li>
                   <li>
                     As capacity increases, most methods begin to degrade, yet HSQR remains consistently accurate and reliable.
@@ -350,7 +363,7 @@
             style="max-height: 500px; width: auto; margin: 0 auto; display: block; margin-bottom: 0.5rem;" />
             <h2 class="subtitle has-text-left" style="max-width: 700px; margin: 0 auto;">
               <strong>Normality assessment</strong> of latent distributions. 
-              By preserving Gaussianity through SFW, our method maintains the statistical structure of the latent space, enabling HSTR to achieve better generative quality than Tree-Ring despite using the same pattern structure.
+              By preserving Gaussianity through SFW, the original SFWMark method maintains the statistical structure of the latent space, enabling HSTR to achieve better generative quality than Tree-Ring despite using the same pattern structure.
             </h2>
           </div>
         </div>
@@ -395,7 +408,7 @@
               This page was built using the <a href="https://github.com/eliahuhorwitz/Academic-project-page-template"
                 target="_blank">Academic Project Page Template</a> which was adopted from the <a
                 href="https://nerfies.github.io" target="_blank">Nerfies</a> project page.
-              You are free to borrow the source code of this website, we just ask that you link back to this page in the
+              The template asks that reused website source code link back to this page in the
               footer. <br> This website is licensed under a <a rel="license"
                 href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">Creative
                 Commons Attribution-ShareAlike 4.0 International License</a>.
