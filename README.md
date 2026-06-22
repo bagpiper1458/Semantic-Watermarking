@@ -388,6 +388,8 @@ accuracy, PSNR, SSIM, and LPIPS. See
 attack definitions, larger-run settings, and the StirMark compatibility note.
 The fixed-key `N=20` pilot findings are recorded in
 [`docs/waves_stirmark_n20_results.md`](docs/waves_stirmark_n20_results.md).
+An editable presentation of the experiment and conclusions is available at
+[`docs/WAVES-StirMark-Benchmark-Results.pptx`](docs/WAVES-StirMark-Benchmark-Results.pptx).
 
 ## Convenience Scripts
 
