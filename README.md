@@ -356,6 +356,39 @@ outputs_fixedkey_k0/coco/<wm_type>/verify-l1_fixedKey_forgery_*_N4000_withID.npz
 outputs_fixedkey_k0/coco/<wm_type>/identify-acc_fixedKey_forgery_*_N4000_withID.npz
 ```
 
+## 5. WAVES-Core and StirMark-Compatible Robustness Benchmark
+
+The unified benchmark compares `Tree-Ring`, `METR`, `RingID`, `HSTR`, and
+`HSQR` under the WAVES-Core distortions and a compact StirMark-compatible
+geometric track. HSTR and HSQR are reported separately as the two HSFW
+variants (`HSFW-HSTR` and `HSFW-HSQR`).
+
+Run the pilot benchmark from the repository root:
+
+```bash
+python src/benchmark_robustness.py \
+  --methods Tree-Ring METR RingID HSTR HSQR \
+  --suite all \
+  --waves_strengths 0.4 0.8 \
+  --num_samples 20 \
+  --attack_batch_size 12 \
+  --result_dir benchmark_results/waves_stirmark_n20 \
+  --seed 20260622 \
+  --lpips \
+  --resume
+
+python src/analyze_benchmark_results.py \
+  benchmark_results/waves_stirmark_n20
+```
+
+The evaluator performs full 2,048-key identification and reports ROC-AUC,
+TPR at 0.1% and 1% FPR, top-1/top-5 identification accuracy, 11-bit key
+accuracy, PSNR, SSIM, and LPIPS. See
+[`docs/waves_stirmark_benchmark.md`](docs/waves_stirmark_benchmark.md) for
+attack definitions, larger-run settings, and the StirMark compatibility note.
+The fixed-key `N=20` pilot findings are recorded in
+[`docs/waves_stirmark_n20_results.md`](docs/waves_stirmark_n20_results.md).
+
 ## Convenience Scripts
 
 Run the standard generation-quality-detection pipeline:
@@ -406,6 +439,8 @@ Additional methods and codebases used or compared in these experiments include:
 - Tree-Ring: https://github.com/YuxinWenRick/tree-ring-watermark
 - RingID: https://github.com/showlab/RingID
 - METR: local experiment method added in this fork for the survey-paper experiments
+- WAVES benchmark: https://github.com/umd-huang-lab/WAVES
+- StirMark Benchmark: https://www.petitcolas.net/watermarking/stirmark/
 
 The original SFWMark project also acknowledges ZoDiac, invisible-watermark, Stable Signature, and Gaussian Shading.
 

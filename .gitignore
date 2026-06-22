@@ -10,6 +10,7 @@ outputs/
 quick_outputs/
 outputs_fixedkey*/
 outputs_*/
+benchmark_results/
 
 # Python files
 z/
